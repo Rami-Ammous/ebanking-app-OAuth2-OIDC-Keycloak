@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: keycloak_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: keycloak
+      MYSQL_USER: keycloak
+      MYSQL_PASSWORD: keycloak
+    ports:
+      - "3307:3306"  # Expose le port 3306 sur votre machine locale
+    volumes:
+      - mysql_data:/var/lib/mysql  # Volume persistant pour les données MySQL
+    networks:
+      - keycloak_network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.2
+    container_name: keycloak
+    environment:
+      DB_VENDOR: mysql
+      DB_ADDR: mysql
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command:
+      - start-dev
+    ports:
+      - "8080:8080"  # Expose Keycloak sur le port 8080
+    depends_on:
+      - mysql
+    volumes:
+      - keycloak_data:/opt/keycloak/data  # Volume persistant pour les données Keycloak
+    networks:
+      - keycloak_network
+
+volumes:
+  mysql_data:
+    name: keycloak_mysql_data  # Volume explicite pour MySQL
+  keycloak_data:
+    name: keycloak_data  # Volume explicite pour Keycloak
+
+networks:
+  keycloak_network:
+    driver: bridge
